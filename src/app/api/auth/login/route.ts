@@ -6,13 +6,17 @@ import { User } from "@/models/User";
 import { verifyPassword } from "@/lib/auth/password";
 import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
 import { checkRateLimit, getClientIp } from "@/lib/auth/rateLimiter";
+import { verifyTotpToken } from "@/lib/auth/mfa";
+import { decryptField } from "@/lib/crypto/encryption";
 
 const MAX_FAILED_ATTEMPTS = 12;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
+
 const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  mfaToken: z.string().length(6).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -28,6 +32,7 @@ export async function POST(req: NextRequest) {
       }
     );
   }
+
   try {
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
@@ -36,12 +41,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { email, password } = parsed.data;
+    const { email, password, mfaToken } = parsed.data;
 
     await connectDB();
 
     const user = await User.findOne({ email }).select("+passwordHash +mfaSecret");
-
 
     const genericError = NextResponse.json(
       { error: "Invalid email or password" },
@@ -50,7 +54,6 @@ export async function POST(req: NextRequest) {
 
     if (!user) return genericError;
 
-    // Check if account is currently locked
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const retryAfterSeconds = Math.ceil(
         (user.lockedUntil.getTime() - Date.now()) / 1000
@@ -68,7 +71,7 @@ export async function POST(req: NextRequest) {
 
       if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
         user.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
-        user.failedLoginAttempts = 0; // reset counter once locked
+        user.failedLoginAttempts = 0;
       }
 
       await user.save();
@@ -78,6 +81,22 @@ export async function POST(req: NextRequest) {
     if (user.failedLoginAttempts > 0) {
       user.failedLoginAttempts = 0;
       await user.save();
+    }
+
+    if (user.mfaEnabled) {
+      if (!mfaToken) {
+        return NextResponse.json(
+          { mfaRequired: true, message: "MFA code required" },
+          { status: 200 }
+        );
+      }
+
+      const secret = decryptField(user.mfaSecret as string);
+      const validCode = verifyTotpToken(mfaToken, secret);
+
+      if (!validCode) {
+        return NextResponse.json({ error: "Invalid MFA code" }, { status: 401 });
+      }
     }
 
     const jti = randomUUID();
@@ -93,7 +112,7 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 60 * 60 * 24 * 15, 
+      maxAge: 60 * 60 * 24 * 15,
     });
 
     response.cookies.set("refreshToken", refreshToken, {
@@ -101,12 +120,12 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/api/auth",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
     });
 
     return response;
   } catch (err) {
-    console.error("Login error:", err); // never log password
+    console.error("Login error:", err);
     return NextResponse.json({ error: "Login failed" }, { status: 500 });
   }
 }
