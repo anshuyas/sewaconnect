@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/models/User";
 import { verifyPassword } from "@/lib/auth/password";
 import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
+import { checkRateLimit, getClientIp } from "@/lib/auth/rateLimiter";
 
 
 const LoginSchema = z.object({
@@ -13,6 +14,18 @@ const LoginSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rateLimit = await checkRateLimit("login", ip);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many login attempts. Please try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      }
+    );
+  }
   try {
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
