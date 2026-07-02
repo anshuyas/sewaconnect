@@ -7,6 +7,8 @@ import { verifyPassword } from "@/lib/auth/password";
 import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
 import { checkRateLimit, getClientIp } from "@/lib/auth/rateLimiter";
 
+const MAX_FAILED_ATTEMPTS = 12;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -48,8 +50,35 @@ export async function POST(req: NextRequest) {
 
     if (!user) return genericError;
 
+    // Check if account is currently locked
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const retryAfterSeconds = Math.ceil(
+        (user.lockedUntil.getTime() - Date.now()) / 1000
+      );
+      return NextResponse.json(
+        { error: "Account temporarily locked due to repeated failed logins." },
+        { status: 423, headers: { "Retry-After": String(retryAfterSeconds) } }
+      );
+    }
+
     const passwordValid = await verifyPassword(user.passwordHash, password);
-    if (!passwordValid) return genericError;
+
+    if (!passwordValid) {
+      user.failedLoginAttempts += 1;
+
+      if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+        user.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+        user.failedLoginAttempts = 0; // reset counter once locked
+      }
+
+      await user.save();
+      return genericError;
+    }
+
+    if (user.failedLoginAttempts > 0) {
+      user.failedLoginAttempts = 0;
+      await user.save();
+    }
 
     const jti = randomUUID();
     const payload = { userId: user._id.toString(), role: user.role, jti };
