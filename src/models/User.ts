@@ -15,6 +15,7 @@ export interface IUser extends Document {
   lockedUntil?: Date;
   createdAt: Date;
   updatedAt: Date;
+  bio?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -63,6 +64,11 @@ const UserSchema = new Schema<IUser>(
     },
     lockedUntil: {
       type: Date,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 500,
     },
   },
   { timestamps: true }
