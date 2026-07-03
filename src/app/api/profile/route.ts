@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/models/User";
-import { getSessionUser } from "@/lib/auth/session";
+import { requireAuth } from "@/middleware/auth";
 import { verifyCsrfToken } from "@/lib/auth/csrf";
 
 const ProfileUpdateSchema = z.object({
@@ -20,12 +20,7 @@ function escapeHtml(input: string): string {
     .replace(/'/g, "&#039;");
 }
 
-export async function PATCH(req: NextRequest) {
-  const session = getSessionUser(req);
-  if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
+export const PATCH = requireAuth(async (req, { session }) => {
   if (!verifyCsrfToken(req)) {
     return NextResponse.json({ error: "Invalid or missing CSRF token" }, { status: 403 });
   }
@@ -56,14 +51,9 @@ export async function PATCH(req: NextRequest) {
     message: "Profile updated",
     profile: { name: user.name, phone: user.phone, bio: user.bio },
   });
-}
+});
 
-export async function GET(req: NextRequest) {
-  const session = getSessionUser(req);
-  if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
+export const GET = requireAuth(async (req, { session }) => {
   await connectDB();
 
   const user = await User.findById(session.userId);
@@ -80,4 +70,4 @@ export async function GET(req: NextRequest) {
       role: user.role,
     },
   });
-}
+});
