@@ -10,6 +10,7 @@ const RegisterSchema = z.object({
   password: z.string().min(12),
   name: z.string().min(2).max(100),
   phone: z.string().optional(),
+  role: z.enum(["customer", "provider"]).default("customer"),
 });
 
 export async function POST(req: NextRequest) {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
       }
     );
   }
-  
+
   try {
     const body = await req.json();
     const parsed = RegisterSchema.safeParse(body);
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, name, phone } = parsed.data;
+    const { email, password, name, phone, role } = parsed.data;
 
     const strength = validatePasswordStrength(password);
     if (!strength.valid) {
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
       passwordHash,
       name,
       phone,
-      role: "customer", 
+      role, 
     });
 
     return NextResponse.json(
