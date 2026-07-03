@@ -119,6 +119,13 @@ export default function DashboardPage() {
               Review pending provider verifications.
               (Admin UI coming next.)
             </p>
+
+            <Link
+              href="/admin/verify"
+              className="inline-block bg-orange-600 text-white rounded px-4 py-2 text-sm hover:bg-orange-700"
+            >
+              Review Pending Providers
+            </Link>
           </div>
         )}
       </div>
