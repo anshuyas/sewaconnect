@@ -5,11 +5,12 @@ import { Booking } from "@/models/Booking";
 import { User } from "@/models/User";
 import { requireRole, requireAuth } from "@/middleware/auth";
 import { verifyCsrfToken } from "@/lib/auth/csrf";
+import { ProviderProfile } from "@/models/ProviderProfile";
 
 const CreateBookingSchema = z.object({
-  providerId: z.string().length(24), 
+  providerId: z.string().length(24),
   serviceDescription: z.string().min(5).max(500),
-  price: z.number().positive(),
+  estimatedHours: z.number().positive().max(24),
   scheduledFor: z.string().datetime(),
 });
 
@@ -25,7 +26,7 @@ export const POST = requireRole(["customer"], async (req, { session }) => {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  const { providerId, serviceDescription, price, scheduledFor } = parsed.data;
+  const { providerId, serviceDescription, estimatedHours, scheduledFor } = parsed.data;
 
   await connectDB();
 
@@ -34,15 +35,28 @@ export const POST = requireRole(["customer"], async (req, { session }) => {
     return NextResponse.json({ error: "Provider not found" }, { status: 404 });
   }
 
+  const providerProfile = await ProviderProfile.findOne({
+    userId: providerId,
+    verificationStatus: "approved",
+  });
+  if (!providerProfile) {
+    return NextResponse.json(
+      { error: "Provider is not available for booking" },
+      { status: 400 }
+    );
+  }
+
+    const price = Math.round(providerProfile.hourlyRate * estimatedHours * 100) / 100;
+
+
   const booking = await Booking.create({
-    customerId: session.userId, // always from session, never from client input
+    customerId: session.userId,
     providerId,
     serviceDescription,
     price,
     scheduledFor: new Date(scheduledFor),
     status: "requested",
   });
-
   return NextResponse.json({ message: "Booking created", booking }, { status: 201 });
 });
 
