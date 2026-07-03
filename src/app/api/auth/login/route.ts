@@ -8,6 +8,7 @@ import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
 import { checkRateLimit, getClientIp } from "@/lib/auth/rateLimiter";
 import { verifyTotpToken } from "@/lib/auth/mfa";
 import { decryptField } from "@/lib/crypto/encryption";
+import { generateCsrfToken } from "@/lib/auth/csrf";
 
 const MAX_FAILED_ATTEMPTS = 12;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -105,6 +106,7 @@ export async function POST(req: NextRequest) {
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
+    const csrfToken = generateCsrfToken();
     const response = NextResponse.json({ message: "Login successful" });
 
     response.cookies.set("accessToken", accessToken, {
@@ -121,6 +123,14 @@ export async function POST(req: NextRequest) {
       sameSite: "strict",
       path: "/api/auth",
       maxAge: 60 * 60 * 24 * 30,
+    });
+
+    response.cookies.set("csrfToken", csrfToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 15,
     });
 
     return response;
