@@ -106,6 +106,13 @@ export default function DashboardPage() {
             >
               View Bookings
             </Link>
+
+            <Link
+              href="/provider-setup"
+              className="inline-block bg-gray-200 text-gray-800 rounded px-4 py-2 text-sm hover:bg-gray-300 mr-2"
+            >
+              Set Up / Edit Profile
+            </Link>
           </div>
         )}
 
