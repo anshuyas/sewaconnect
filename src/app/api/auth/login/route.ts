@@ -9,6 +9,7 @@ import { checkRateLimit, getClientIp } from "@/lib/auth/rateLimiter";
 import { verifyTotpToken } from "@/lib/auth/mfa";
 import { decryptField } from "@/lib/crypto/encryption";
 import { generateCsrfToken } from "@/lib/auth/csrf";
+import { sanitizeInput } from "@/lib/validation/sanitize";
 
 const MAX_FAILED_ATTEMPTS = 12;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json();
+const body = sanitizeInput(await req.json());
     const parsed = LoginSchema.safeParse(body);
 
     if (!parsed.success) {
