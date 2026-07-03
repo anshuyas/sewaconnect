@@ -79,6 +79,13 @@ export default function DashboardPage() {
             >
               Browse Providers
             </Link>
+
+            <Link
+              href="/bookings"
+              className="inline-block ml-2 bg-gray-200 text-gray-800 rounded px-4 py-2 text-sm hover:bg-gray-300"
+            >
+              My Bookings
+            </Link>
           </div>
         )}
 
@@ -92,6 +99,13 @@ export default function DashboardPage() {
               Manage your profile and view incoming bookings.
               (Booking management UI coming next.)
             </p>
+
+            <Link
+              href="/bookings"
+              className="inline-block bg-orange-600 text-white rounded px-4 py-2 text-sm hover:bg-orange-700"
+            >
+              View Bookings
+            </Link>
           </div>
         )}
 
