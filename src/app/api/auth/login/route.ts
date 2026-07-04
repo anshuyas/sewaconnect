@@ -8,17 +8,18 @@ import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
 import { checkRateLimit, getClientIp } from "@/lib/auth/rateLimiter";
 import { verifyTotpToken } from "@/lib/auth/mfa";
 import { decryptField } from "@/lib/crypto/encryption";
-import { generateCsrfToken } from "@/lib/auth/csrf";
 import { sanitizeInput } from "@/lib/validation/sanitize";
+import { generateCsrfToken } from "@/lib/auth/csrf";
+import { verifyRecaptcha } from "@/lib/auth/recaptcha";
 
 const MAX_FAILED_ATTEMPTS = 12;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
-
 
 const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
   mfaToken: z.string().length(6).optional(),
+  recaptchaToken: z.string(),
 });
 
 export async function POST(req: NextRequest) {
@@ -36,14 +37,22 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-const body = sanitizeInput(await req.json());
+    const body = sanitizeInput(await req.json());
     const parsed = LoginSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { email, password, mfaToken } = parsed.data;
+    const { email, password, mfaToken, recaptchaToken } = parsed.data;
+
+    const recaptchaValid = await verifyRecaptcha(recaptchaToken);
+    if (!recaptchaValid) {
+      return NextResponse.json(
+        { error: "CAPTCHA verification failed" },
+        { status: 400 }
+      );
+    }
 
     await connectDB();
 
@@ -55,6 +64,14 @@ const body = sanitizeInput(await req.json());
     );
 
     if (!user) return genericError;
+
+    // OAuth-only accounts have no password to check against.
+    if (!user.passwordHash) {
+      return NextResponse.json(
+        { error: "This account uses Google sign-in. Please log in with Google." },
+        { status: 400 }
+      );
+    }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const retryAfterSeconds = Math.ceil(
@@ -106,8 +123,8 @@ const body = sanitizeInput(await req.json());
 
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
-
     const csrfToken = generateCsrfToken();
+
     const response = NextResponse.json({ message: "Login successful" });
 
     response.cookies.set("accessToken", accessToken, {

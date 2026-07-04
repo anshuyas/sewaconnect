@@ -18,6 +18,14 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
+    const recaptchaToken = await new Promise<string>((resolve) => {
+      window.grecaptcha.ready(() => {
+        window.grecaptcha
+          .execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string, { action: "login" })
+          .then(resolve);
+      });
+    });
+
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -26,6 +34,7 @@ export default function LoginPage() {
           email,
           password,
           ...(mfaRequired && mfaToken ? { mfaToken } : {}),
+          recaptchaToken,
         }),
       });
 
