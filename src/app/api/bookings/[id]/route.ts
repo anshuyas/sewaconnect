@@ -45,13 +45,13 @@ export const PATCH = requireAuth(async (req, { session, params }) => {
 
   await connectDB();
 
-  const booking = await Booking.findById(params.id);
-  if (!booking) {
+  const existing = await Booking.findById(params.id);
+  if (!existing) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
 
-  const isCustomer = booking.customerId.toString() === session.userId;
-  const isProvider = booking.providerId.toString() === session.userId;
+  const isCustomer = existing.customerId.toString() === session.userId;
+  const isProvider = existing.providerId.toString() === session.userId;
   const isAdmin = session.role === "admin";
 
   const { status } = parsed.data;
@@ -67,8 +67,26 @@ export const PATCH = requireAuth(async (req, { session, params }) => {
     return NextResponse.json({ error: "Not authorized to cancel this booking" }, { status: 403 });
   }
 
-  booking.status = status;
-  await booking.save();
+  const validTransitions: Record<string, string[]> = {
+    accepted: ["requested"],
+    completed: ["accepted"],
+    cancelled: ["requested", "accepted"],
+  };
 
-  return NextResponse.json({ message: "Booking updated", booking });
-});
+  const allowedPriorStatuses = validTransitions[status] || [];
+
+  const updated = await Booking.findOneAndUpdate(
+    { _id: params.id, status: { $in: allowedPriorStatuses } },
+    { $set: { status } },
+    { new: true }
+  );
+
+  if (!updated) {
+    return NextResponse.json(
+      { error: "Booking status changed before this update could be applied. Please refresh and try again." },
+      { status: 409 }
+    );
+  }
+
+  return NextResponse.json({ message: "Booking updated", booking: updated });
+})
