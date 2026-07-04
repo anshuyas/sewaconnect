@@ -11,6 +11,9 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Access-Control-Allow-Origin", value: "http://localhost:3001" },
+          { key: "Access-Control-Allow-Methods", value: "GET, POST, PATCH, DELETE" },
+          { key: "Access-Control-Allow-Credentials", value: "true" },
         ],
       },
     ];
