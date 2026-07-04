@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -108,6 +109,19 @@ export default function LoginPage() {
             {loading ? "Please wait..." : mfaRequired ? "Verify code" : "Log in"}
           </button>
         </form>
+
+        <div className="my-4 flex items-center gap-2">
+          <div className="flex-1 border-t" />
+          <span className="text-xs text-gray-400">OR</span>
+          <div className="flex-1 border-t" />
+        </div>
+
+        <Link
+          href="/api/auth/oauth/google"
+          className="block w-full text-center border rounded py-2 text-sm hover:bg-gray-50"
+        >
+          Continue with Google
+        </Link>
 
         <p className="text-sm text-center mt-4">
           Don&apos;t have an account?{" "}

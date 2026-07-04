@@ -4,7 +4,8 @@ export type UserRole = "customer" | "provider" | "admin";
 
 export interface IUser extends Document {
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  authProvider: "local" | "google";
   role: UserRole;
   name: string;
   phone?: string;
@@ -29,7 +30,14 @@ const UserSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: true,
+      required: function (this: any) {
+        return this.authProvider === "local";
+      },
+    },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
     role: {
       type: String,
