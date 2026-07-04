@@ -1,3 +1,4 @@
+const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 export function sanitizeInput<T>(input: T): T {
   if (Array.isArray(input)) {
@@ -7,8 +8,8 @@ export function sanitizeInput<T>(input: T): T {
   if (input !== null && typeof input === "object") {
     const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
-      if (key.startsWith("$") || key.includes(".")) {
-        continue; // drop the key entirely
+      if (key.startsWith("$") || key.includes(".") || DANGEROUS_KEYS.has(key)) {
+        continue; 
       }
       sanitized[key] = sanitizeInput(value);
     }
