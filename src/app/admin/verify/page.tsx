@@ -54,60 +54,69 @@ export default function AdminVerifyPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+      <main className="min-h-screen flex items-center justify-center bg-bg">
+        <p className="text-muted text-sm">Loading...</p>
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600">{error}</p>
+      <main className="min-h-screen flex items-center justify-center bg-bg">
+        <p className="text-danger text-sm">{error}</p>
       </main>
     );
   }
 
   return (
     <>
-    <Navbar/>
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-6">Pending Provider Verifications</h1>
+      <Navbar />
+      <main className="min-h-screen bg-bg px-8 py-10">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="font-display text-2xl font-medium mb-6">
+            Pending Provider Verifications
+          </h1>
 
-        {pending.length === 0 && (
-          <p className="text-gray-500">No pending providers.</p>
-        )}
-
-        <div className="space-y-4">
-          {pending.map((p) => (
-            <div key={p._id} className="bg-white rounded-lg shadow p-5">
-              <p className="font-medium">{p.userId.name}</p>
-              <p className="text-sm text-gray-500">{p.userId.email}</p>
-              <p className="text-sm mt-1">
-                {p.serviceCategory} · NPR {p.hourlyRate}/hr
-              </p>
-              {p.bio && <p className="text-sm text-gray-600 mt-1">{p.bio}</p>}
-
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => decide(p._id, "approved")}
-                  className="bg-green-600 text-white rounded px-4 py-1.5 text-sm hover:bg-green-700"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => decide(p._id, "rejected")}
-                  className="bg-red-600 text-white rounded px-4 py-1.5 text-sm hover:bg-red-700"
-                >
-                  Reject
-                </button>
-              </div>
+          {pending.length === 0 && (
+            <div className="bg-surface border border-border rounded-2xl shadow-sm p-8 text-center">
+              <p className="text-muted text-sm">No pending providers.</p>
             </div>
-          ))}
+          )}
+
+          <div className="space-y-4">
+            {pending.map((p) => (
+              <div key={p._id} className="bg-surface border border-border rounded-2xl shadow-sm p-5">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{p.userId.name}</p>
+                  <span className="text-xs bg-yellow-50 text-yellow-800 border border-yellow-200 px-2 py-0.5 rounded-full font-medium">
+                    Pending
+                  </span>
+                </div>
+                <p className="text-sm text-muted">{p.userId.email}</p>
+                <p className="text-sm mt-2">
+                  <span className="font-medium">{p.serviceCategory}</span> · NPR {p.hourlyRate}/hr
+                </p>
+                {p.bio && <p className="text-sm text-muted mt-1">{p.bio}</p>}
+
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={() => decide(p._id, "approved")}
+                    className="bg-success text-white rounded-lg px-4 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => decide(p._id, "rejected")}
+                    className="bg-danger text-white rounded-lg px-4 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
     </>
   );
 }
