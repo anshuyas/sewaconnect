@@ -29,7 +29,7 @@ export const GET = requireAuth(async (req, { session, params }) => {
 });
 
 const UpdateStatusSchema = z.object({
-  status: z.enum(["accepted", "completed", "cancelled"]),
+  status: z.enum(["accepted", "completed", "cancelled", "paid"]),
 });
 
 export const PATCH = requireAuth(async (req, { session, params }) => {
@@ -66,11 +66,18 @@ export const PATCH = requireAuth(async (req, { session, params }) => {
   if (status === "cancelled" && !isCustomer && !isProvider && !isAdmin) {
     return NextResponse.json({ error: "Not authorized to cancel this booking" }, { status: 403 });
   }
+  if (status === "paid" && !isCustomer && !isAdmin) {
+    return NextResponse.json(
+      { error: "Only the customer can confirm payment" },
+      { status: 403 }
+    );
+  }
 
   const validTransitions: Record<string, string[]> = {
     accepted: ["requested"],
     completed: ["accepted"],
     cancelled: ["requested", "accepted"],
+    paid: ["completed"],
   };
 
   const allowedPriorStatuses = validTransitions[status] || [];

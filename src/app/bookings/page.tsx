@@ -122,6 +122,14 @@ export default function BookingsPage() {
                     Mark completed
                   </button>
                 )}
+                {b.status === "completed" && (
+                  <button
+                    onClick={() => updateStatus(b._id, "paid")}
+                    className="bg-green-600 text-white rounded px-3 py-1.5 text-sm hover:bg-green-700"
+                  >
+                    Simulate Payment
+                  </button>
+                )}
                 {(b.status === "requested" || b.status === "accepted") && (
                   <button
                     onClick={() => updateStatus(b._id, "cancelled")}
