@@ -11,6 +11,7 @@ import { decryptField } from "@/lib/crypto/encryption";
 import { sanitizeInput } from "@/lib/validation/sanitize";
 import { generateCsrfToken } from "@/lib/auth/csrf";
 import { verifyRecaptcha } from "@/lib/auth/recaptcha";
+import { logAudit } from "@/lib/auth/auditLog";
 
 const MAX_FAILED_ATTEMPTS = 12;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -90,10 +91,12 @@ export async function POST(req: NextRequest) {
 
       if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
         user.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+        await logAudit("account_locked", { email }, user._id.toString(), ip);
         user.failedLoginAttempts = 0;
       }
 
       await user.save();
+      await logAudit("login_failed", { email }, undefined, ip);
       return genericError;
     }
 
@@ -151,6 +154,7 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24 * 15,
     });
 
+    await logAudit("login_success", {}, user._id.toString(), ip);
     return response;
   } catch (err) {
     console.error("Login error:", err);

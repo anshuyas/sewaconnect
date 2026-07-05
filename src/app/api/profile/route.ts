@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/models/User";
 import { requireAuth } from "@/middleware/auth";
 import { verifyCsrfToken } from "@/lib/auth/csrf";
+import { logAudit } from "@/lib/auth/auditLog";
 
 const ProfileUpdateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
@@ -33,6 +34,17 @@ export const PATCH = requireAuth(async (req, { session }) => {
   }
 
   await connectDB();
+
+  const suspiciousFields = Object.keys(body).filter(
+    (key) => !["name", "phone", "bio"].includes(key)
+  );
+  if (suspiciousFields.length > 0) {
+    await logAudit(
+      "role_change_attempt_blocked",
+      { attemptedFields: suspiciousFields },
+      session.userId
+    );
+  }
 
   const user = await User.findById(session.userId);
   if (!user) {
