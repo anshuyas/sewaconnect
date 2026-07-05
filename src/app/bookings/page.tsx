@@ -77,7 +77,7 @@ export default function BookingsPage() {
       <Navbar />
       <main className="min-h-screen bg-bg px-8 py-10">
         <div className="max-w-2xl mx-auto">
-          <h1 className="font-display text-2xl font-medium mb-6">Your Bookings</h1>
+          <h1 className="font-display text-2xl font-medium mb-6">Bookings</h1>
 
           {actionError && (
             <div className="bg-danger/5 border border-danger/20 text-danger rounded-lg px-4 py-3 mb-4 text-sm">
