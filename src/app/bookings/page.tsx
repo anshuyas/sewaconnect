@@ -19,11 +19,11 @@ function getCsrfToken(): string {
 }
 
 const statusColors: Record<string, string> = {
-  requested: "bg-yellow-100 text-yellow-800",
-  accepted: "bg-blue-100 text-blue-800",
-  completed: "bg-purple-100 text-purple-800",
-  paid: "bg-green-100 text-green-800",
-  cancelled: "bg-gray-100 text-gray-600",
+  requested: "bg-yellow-50 text-yellow-800 border-yellow-200",
+  accepted: "bg-blue-50 text-blue-800 border-blue-200",
+  completed: "bg-purple-50 text-purple-800 border-purple-200",
+  paid: "bg-green-50 text-green-800 border-green-200",
+  cancelled: "bg-gray-50 text-gray-600 border-gray-200",
 };
 
 export default function BookingsPage() {
@@ -66,87 +66,89 @@ export default function BookingsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p>Loading bookings...</p>
+      <main className="min-h-screen flex items-center justify-center bg-bg">
+        <p className="text-muted text-sm">Loading bookings...</p>
       </main>
     );
   }
 
   return (
     <>
-    <Navbar/>
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-6">Your Bookings</h1>
+      <Navbar />
+      <main className="min-h-screen bg-bg px-8 py-10">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="font-display text-2xl font-medium mb-6">Your Bookings</h1>
 
-        {actionError && (
-          <div className="bg-red-100 text-red-800 rounded p-3 mb-4 text-sm">
-            {actionError}
-          </div>
-        )}
-
-        {bookings.length === 0 && (
-          <p className="text-gray-500">No bookings yet.</p>
-        )}
-
-        <div className="space-y-4">
-          {bookings.map((b) => (
-            <div key={b._id} className="bg-white rounded-lg shadow p-5">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium">{b.serviceDescription}</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {new Date(b.scheduledFor).toLocaleString()} · NPR {b.price}
-                  </p>
-                </div>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
-                    statusColors[b.status] || "bg-gray-100"
-                  }`}
-                >
-                  {b.status}
-                </span>
-              </div>
-
-              <div className="flex gap-2 mt-3">
-                {b.status === "requested" && (
-                  <button
-                    onClick={() => updateStatus(b._id, "accepted")}
-                    className="bg-blue-600 text-white rounded px-3 py-1.5 text-sm hover:bg-blue-700"
-                  >
-                    Accept
-                  </button>
-                )}
-                {b.status === "accepted" && (
-                  <button
-                    onClick={() => updateStatus(b._id, "completed")}
-                    className="bg-purple-600 text-white rounded px-3 py-1.5 text-sm hover:bg-purple-700"
-                  >
-                    Mark completed
-                  </button>
-                )}
-                {b.status === "completed" && (
-                  <button
-                    onClick={() => updateStatus(b._id, "paid")}
-                    className="bg-green-600 text-white rounded px-3 py-1.5 text-sm hover:bg-green-700"
-                  >
-                    Simulate Payment
-                  </button>
-                )}
-                {(b.status === "requested" || b.status === "accepted") && (
-                  <button
-                    onClick={() => updateStatus(b._id, "cancelled")}
-                    className="text-gray-600 text-sm hover:underline"
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
+          {actionError && (
+            <div className="bg-danger/5 border border-danger/20 text-danger rounded-lg px-4 py-3 mb-4 text-sm">
+              {actionError}
             </div>
-          ))}
+          )}
+
+          {bookings.length === 0 && (
+            <div className="bg-surface border border-border rounded-2xl shadow-sm p-8 text-center">
+              <p className="text-muted text-sm">No bookings yet.</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {bookings.map((b) => (
+              <div key={b._id} className="bg-surface border border-border rounded-2xl shadow-sm p-5">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium">{b.serviceDescription}</p>
+                    <p className="text-sm text-muted mt-1">
+                      {new Date(b.scheduledFor).toLocaleString()} · NPR {b.price}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize border ${
+                      statusColors[b.status] || "bg-gray-100"
+                    }`}
+                  >
+                    {b.status}
+                  </span>
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                  {b.status === "requested" && (
+                    <button
+                      onClick={() => updateStatus(b._id, "accepted")}
+                      className="bg-primary text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-primary-dark transition-colors"
+                    >
+                      Accept
+                    </button>
+                  )}
+                  {b.status === "accepted" && (
+                    <button
+                      onClick={() => updateStatus(b._id, "completed")}
+                      className="bg-primary text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-primary-dark transition-colors"
+                    >
+                      Mark completed
+                    </button>
+                  )}
+                  {b.status === "completed" && (
+                    <button
+                      onClick={() => updateStatus(b._id, "paid")}
+                      className="bg-success text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:opacity-90 transition-opacity"
+                    >
+                      Simulate Payment
+                    </button>
+                  )}
+                  {(b.status === "requested" || b.status === "accepted") && (
+                    <button
+                      onClick={() => updateStatus(b._id, "cancelled")}
+                      className="border border-border text-muted rounded-lg px-3 py-1.5 text-sm font-medium hover:border-danger hover:text-danger transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
     </>
   );
 }
