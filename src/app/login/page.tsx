@@ -91,7 +91,7 @@ export default function LoginPage() {
 
         <div className="flex gap-6 relative z-10">
           <div>
-            <p className="font-display text-2xl font-semibold text-accent">3</p>
+            <p className="font-display text-2xl font-semibold text-accent">2</p>
             <p className="text-white/60 text-xs mt-1">Roles, one platform</p>
           </div>
           <div>
