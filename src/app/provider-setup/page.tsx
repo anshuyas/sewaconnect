@@ -44,61 +44,69 @@ export default function ProviderSetupPage() {
 
   return (
     <>
-    <Navbar/>
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm bg-white p-8 rounded-lg shadow">
-        <h1 className="text-2xl font-semibold mb-2 text-center">Set up your provider profile</h1>
-        <p className="text-sm text-gray-500 text-center mb-6">
-          An admin will review and approve your profile before customers can book you.
-        </p>
+      <Navbar />
+      <main className="min-h-screen flex items-center justify-center bg-bg px-4">
+        <div className="w-full max-w-sm">
+          <div className="bg-surface border border-border rounded-2xl shadow-sm p-8">
+            <h1 className="font-display text-2xl font-medium mb-1 text-center">
+              Set up your provider profile
+            </h1>
+            <p className="text-sm text-muted text-center mb-6">
+              An admin will review and approve your profile before customers can book you.
+            </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Service category</label>
-            <input
-              required
-              placeholder="e.g. Plumbing, Tutoring, Electrical"
-              value={serviceCategory}
-              onChange={(e) => setServiceCategory(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-            />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Service category</label>
+                <input
+                  required
+                  placeholder="e.g. Plumbing, Tutoring, Electrical"
+                  value={serviceCategory}
+                  onChange={(e) => setServiceCategory(e.target.value)}
+                  className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Hourly rate (NPR)</label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  value={hourlyRate}
+                  onChange={(e) => setHourlyRate(Number(e.target.value))}
+                  className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Bio (optional)</label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  maxLength={1000}
+                  rows={3}
+                  className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+
+              {error && (
+                <p className="text-danger text-sm bg-danger/5 border border-danger/20 rounded-lg px-3 py-2">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-primary text-white rounded-lg py-2.5 font-medium text-sm hover:bg-primary-dark transition-colors disabled:opacity-50"
+              >
+                {loading ? "Submitting..." : "Submit for review"}
+              </button>
+            </form>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Hourly rate (NPR)</label>
-            <input
-              type="number"
-              required
-              min={1}
-              value={hourlyRate}
-              onChange={(e) => setHourlyRate(Number(e.target.value))}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Bio (optional)</label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              maxLength={1000}
-              rows={3}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-orange-600 text-white rounded py-2 font-medium hover:bg-orange-700 disabled:opacity-50"
-          >
-            {loading ? "Submitting..." : "Submit for review"}
-          </button>
-        </form>
-      </div>
-    </main>
+        </div>
+      </main>
     </>
   );
 }
