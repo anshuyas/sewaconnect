@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Navbar from "@/components/ui/Navbar";
 
 interface Booking {
   _id: string;
@@ -72,6 +73,8 @@ export default function BookingsPage() {
   }
 
   return (
+    <>
+    <Navbar/>
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-semibold mb-6">Your Bookings</h1>
@@ -144,5 +147,6 @@ export default function BookingsPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }

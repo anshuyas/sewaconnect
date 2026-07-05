@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Navbar from "@/components/ui/Navbar";
 
 interface Provider {
   _id: string;
@@ -78,6 +79,8 @@ export default function ProvidersPage() {
   }
 
   return (
+    <>
+    <Navbar/>
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-semibold mb-6">Available Providers</h1>
@@ -182,5 +185,6 @@ export default function ProvidersPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }

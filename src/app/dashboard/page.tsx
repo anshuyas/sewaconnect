@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Navbar from "@/components/ui/Navbar";
 
 interface Profile {
   email: string;
@@ -53,6 +54,8 @@ export default function DashboardPage() {
   }
 
   return (
+    <>
+      <Navbar />
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-3xl mx-auto">
         {/* Profile Card */}
@@ -137,5 +140,6 @@ export default function DashboardPage() {
         )}
       </div>
     </main>
-  );
+</>  
+);
 }

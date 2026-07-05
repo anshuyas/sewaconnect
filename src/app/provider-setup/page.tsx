@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/ui/Navbar";
 
 function getCsrfToken(): string {
   const match = document.cookie.match(/(?:^|; )csrfToken=([^;]*)/);
@@ -42,6 +43,8 @@ export default function ProviderSetupPage() {
   }
 
   return (
+    <>
+    <Navbar/>
     <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white p-8 rounded-lg shadow">
         <h1 className="text-2xl font-semibold mb-2 text-center">Set up your provider profile</h1>
@@ -96,5 +99,6 @@ export default function ProviderSetupPage() {
         </form>
       </div>
     </main>
+    </>
   );
 }

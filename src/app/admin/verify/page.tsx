@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Navbar from "@/components/ui/Navbar";
 
 interface PendingProvider {
   _id: string;
@@ -68,6 +69,8 @@ export default function AdminVerifyPage() {
   }
 
   return (
+    <>
+    <Navbar/>
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-semibold mb-6">Pending Provider Verifications</h1>
@@ -105,5 +108,6 @@ export default function AdminVerifyPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }
