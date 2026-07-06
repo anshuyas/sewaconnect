@@ -6,9 +6,12 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3000"
     env_file:
       - .env
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/sewaconnect
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - mongo
       - redis
