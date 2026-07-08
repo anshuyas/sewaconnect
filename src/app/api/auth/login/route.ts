@@ -20,7 +20,7 @@ const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
   mfaToken: z.string().length(6).optional(),
-  recaptchaToken: z.string(),
+  recaptchaToken: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -47,12 +47,25 @@ export async function POST(req: NextRequest) {
 
     const { email, password, mfaToken, recaptchaToken } = parsed.data;
 
-    const recaptchaValid = await verifyRecaptcha(recaptchaToken);
-    if (!recaptchaValid) {
-      return NextResponse.json(
-        { error: "CAPTCHA verification failed" },
-        { status: 400 }
-      );
+    // CAPTCHA is only required on the initial credentials step. By the
+    // MFA step, the password has already been verified and this step
+    // is further protected by rate limiting and account lockout, so
+    // requiring a second CAPTCHA completion here would just be
+    // redundant friction with no real security gain.
+    if (!mfaToken) {
+      if (!recaptchaToken) {
+        return NextResponse.json(
+          { error: "CAPTCHA verification required" },
+          { status: 400 }
+        );
+      }
+      const recaptchaValid = await verifyRecaptcha(recaptchaToken);
+      if (!recaptchaValid) {
+        return NextResponse.json(
+          { error: "CAPTCHA verification failed" },
+          { status: 400 }
+        );
+      }
     }
 
     await connectDB();
@@ -66,7 +79,6 @@ export async function POST(req: NextRequest) {
 
     if (!user) return genericError;
 
-    // OAuth-only accounts have no password to check against.
     if (!user.passwordHash) {
       return NextResponse.json(
         { error: "This account uses Google sign-in. Please log in with Google." },

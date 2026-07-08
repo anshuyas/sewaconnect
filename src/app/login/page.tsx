@@ -14,20 +14,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
+    if (loading) return; // prevent double-submission
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const recaptchaToken = await new Promise<string>((resolve) => {
+      let recaptchaToken: string | undefined;
+
+      if (!mfaRequired) {
         // @ts-expect-error grecaptcha is loaded globally via the script tag
-        grecaptcha.ready(() => {
-          // @ts-expect-error same
-          grecaptcha
-            .execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: "login" })
-            .then(resolve);
-        });
-      });
+        recaptchaToken = grecaptcha.getResponse();
+
+        if (!recaptchaToken) {
+          setError("Please complete the CAPTCHA");
+          setLoading(false);
+          return;
+        }
+      }
 
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -36,7 +40,7 @@ export default function LoginPage() {
           email,
           password,
           ...(mfaRequired && mfaToken ? { mfaToken } : {}),
-          recaptchaToken,
+          ...(recaptchaToken ? { recaptchaToken } : {}),
         }),
       });
 
@@ -45,6 +49,8 @@ export default function LoginPage() {
       if (!res.ok) {
         setError(data.error || "Login failed");
         setLoading(false);
+        // @ts-expect-error grecaptcha is loaded globally
+        grecaptcha.reset();
         return;
       }
 
@@ -170,6 +176,7 @@ export default function LoginPage() {
             >
               {loading ? "Please wait..." : mfaRequired ? "Verify code" : "Log in"}
             </button>
+            <div className="g-recaptcha" data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}></div>
           </form>
 
           <div className="my-5 flex items-center gap-2">

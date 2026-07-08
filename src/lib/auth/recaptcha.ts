@@ -14,8 +14,9 @@ export async function verifyRecaptcha(token: string): Promise<boolean> {
     });
 
     const data = await res.json();
-    return data.success === true && data.score >= 0.5;
-  } catch (err) {
+        console.log("reCAPTCHA verify response:", data);
+    return data.success === true;
+  } catch {
     return false;
   }
 }
