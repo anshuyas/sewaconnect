@@ -69,7 +69,7 @@ export default function RegisterPage() {
           <p className="font-display text-4xl font-medium text-white leading-tight">
             Your skills,
             <br />
-            someone's solution.
+            someone&apos;s solution.
           </p>
           <p className="text-white/70 text-sm mt-4 max-w-xs">
             Join as a customer looking for help, or a provider ready to offer

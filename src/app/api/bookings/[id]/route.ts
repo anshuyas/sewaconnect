@@ -16,6 +16,8 @@ export const GET = requireAuth(async (req, { session, params }) => {
 
   const isCustomer = booking.customerId.toString() === session.userId;
   const isProvider = booking.providerId.toString() === session.userId;
+
+  //IDOR prevention (object-level authorization)
   const allowed =
     isCustomer ||
     isProvider ||
@@ -82,6 +84,8 @@ export const PATCH = requireAuth(async (req, { session, params }) => {
 
   const allowedPriorStatuses = validTransitions[status] || [];
 
+
+  //Race-condition prevention (atomic status transition)
   const updated = await Booking.findOneAndUpdate(
     { _id: params.id, status: { $in: allowedPriorStatuses } },
     { $set: { status } },
