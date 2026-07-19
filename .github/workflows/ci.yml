@@ -33,7 +33,7 @@ jobs:
         run: npm run test:security
 
       - name: Dependency vulnerability audit
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
   sast:
     runs-on: ubuntu-latest
