@@ -46,6 +46,11 @@ export default function LoginPage() {
 
       const data = await res.json();
 
+      if (data.passwordExpired && data.resetToken) {
+      router.push(`/reset-password?token=${data.resetToken}`);
+      return;
+    }
+
       if (!res.ok) {
         setError(data.error || "Login failed");
         setLoading(false);
