@@ -5,13 +5,15 @@ export type UserRole = "customer" | "provider" | "admin";
 export interface IUser extends Document {
   email: string;
   passwordHash?: string;
+  passwordHistory: string[]; 
+  passwordChangedAt: Date; 
   authProvider: "local" | "google";
   role: UserRole;
   name: string;
   phone?: string;
   isVerified: boolean;
   mfaEnabled: boolean;
-  mfaSecret?: string; // encrypted at rest — we'll wire this up when we build MFA
+  mfaSecret?: string; 
   failedLoginAttempts: number;
   lockedUntil?: Date;
   createdAt: Date;
@@ -33,6 +35,15 @@ const UserSchema = new Schema<IUser>(
       required: function (this: any) {
         return this.authProvider === "local";
       },
+    },
+    passwordHistory: {
+      type: [String],
+      default: [],
+      select: false,
+    },
+    passwordChangedAt: {
+      type: Date,
+      default: Date.now,
     },
     authProvider: {
       type: String,

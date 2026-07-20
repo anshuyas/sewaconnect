@@ -1,8 +1,11 @@
 import argon2 from "argon2";
+import { validatePasswordStrength } from "./passwordPolicy";
+
+export { validatePasswordStrength };
 
 const ARGON2_OPTIONS = {
   type: argon2.argon2id,
-  memoryCost: 19456, // 19 MiB — OWASP minimum recommendation
+  memoryCost: 19456, 
   timeCost: 2,
   parallelism: 1,
 };
@@ -22,27 +25,19 @@ export async function verifyPassword(
   }
 }
 
-export function validatePasswordStrength(password: string): {
-  valid: boolean;
-  reasons: string[];
-} {
-  const reasons: string[] = [];
+export async function isPasswordReused(
+  newPassword: string,
+  currentHash: string | undefined,
+  historyHashes: string[] = []
+): Promise<boolean> {
+  const hashesToCheck = [currentHash, ...historyHashes].filter(
+    (h): h is string => Boolean(h)
+  );
 
-  if (password.length < 12) {
-    reasons.push("Password must be at least 12 characters long.");
+  for (const hash of hashesToCheck) {
+    if (await verifyPassword(hash, newPassword)) {
+      return true;
+    }
   }
-  if (!/[a-z]/.test(password)) {
-    reasons.push("Password must include a lowercase letter.");
-  }
-  if (!/[A-Z]/.test(password)) {
-    reasons.push("Password must include an uppercase letter.");
-  }
-  if (!/[0-9]/.test(password)) {
-    reasons.push("Password must include a number.");
-  }
-  if (!/[^a-zA-Z0-9]/.test(password)) {
-    reasons.push("Password must include a special character.");
-  }
-
-  return { valid: reasons.length === 0, reasons };
+  return false;
 }
