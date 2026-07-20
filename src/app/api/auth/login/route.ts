@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/models/User";
 import { verifyPassword } from "@/lib/auth/password";
 import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
+import { signPasswordResetToken } from "@/lib/auth/passwordResetToken";
 import { checkRateLimit, getClientIp } from "@/lib/auth/rateLimiter";
 import { verifyTotpToken } from "@/lib/auth/mfa";
 import { decryptField } from "@/lib/crypto/encryption";
@@ -12,6 +13,7 @@ import { sanitizeInput } from "@/lib/validation/sanitize";
 import { generateCsrfToken } from "@/lib/auth/csrf";
 import { verifyRecaptcha } from "@/lib/auth/recaptcha";
 import { logAudit } from "@/lib/auth/auditLog";
+import { isPasswordExpired } from "@/lib/auth/passwordPolicy";
 
 const MAX_FAILED_ATTEMPTS = 12;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -47,11 +49,6 @@ export async function POST(req: NextRequest) {
 
     const { email, password, mfaToken, recaptchaToken } = parsed.data;
 
-    // CAPTCHA is only required on the initial credentials step. By the
-    // MFA step, the password has already been verified and this step
-    // is further protected by rate limiting and account lockout, so
-    // requiring a second CAPTCHA completion here would just be
-    // redundant friction with no real security gain.
     if (!mfaToken) {
       if (!recaptchaToken) {
         return NextResponse.json(
@@ -70,7 +67,9 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const user = await User.findOne({ email }).select("+passwordHash +mfaSecret");
+    const user = await User.findOne({ email }).select(
+      "+passwordHash +mfaSecret +passwordHistory"
+    );
 
     const genericError = NextResponse.json(
       { error: "Invalid email or password" },
@@ -131,6 +130,19 @@ export async function POST(req: NextRequest) {
       if (!validCode) {
         return NextResponse.json({ error: "Invalid MFA code" }, { status: 401 });
       }
+    }
+
+    if (isPasswordExpired(user.passwordChangedAt)) {
+      const resetToken = signPasswordResetToken(user._id.toString());
+      await logAudit("password_expired_login_blocked", {}, user._id.toString(), ip);
+      return NextResponse.json(
+        {
+          error: "Your password has expired. Please set a new password to continue.",
+          passwordExpired: true,
+          resetToken,
+        },
+        { status: 403 }
+      );
     }
 
     const jti = randomUUID();
