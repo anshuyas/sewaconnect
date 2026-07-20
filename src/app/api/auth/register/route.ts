@@ -19,13 +19,15 @@ export async function POST(req: NextRequest) {
 
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { error: "Too many registration attempts. Please try again later." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
-      }
-    );
-  }
+    { error: rateLimit.reason === "blocked"
+        ? "Your IP has been temporarily blocked due to suspicious activity."
+        : "Too many login attempts. Please try again later." },
+    {
+      status: rateLimit.reason === "blocked" ? 403 : 429,
+      headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+    }
+  );
+}
 
   try {
     const body = await req.json();
