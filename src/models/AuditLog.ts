@@ -9,7 +9,14 @@ export type AuditAction =
   | "booking_created"
   | "booking_status_changed"
   | "provider_verification_decision"
-  | "profile_updated";
+  | "profile_updated"
+  | "password_expired_login_blocked"
+  | "password_change_failed"
+  | "password_changed"
+  | "password_changed_after_expiry"
+  | "ip_manually_blocked"
+  | "ip_allowlisted"
+  | "ip_rule_removed";
 
 export interface IAuditLog extends Document {
   userId?: Types.ObjectId;
