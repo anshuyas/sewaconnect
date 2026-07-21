@@ -14,63 +14,61 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    if (loading) return; // prevent double-submission
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  if (loading) return; // prevent double-submission
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      let recaptchaToken: string | undefined;
+  try {
+    // @ts-expect-error grecaptcha is loaded globally via the script tag
+    const recaptchaToken = grecaptcha.getResponse();
 
-      if (!mfaRequired) {
-        // @ts-expect-error grecaptcha is loaded globally via the script tag
-        recaptchaToken = grecaptcha.getResponse();
+    if (!recaptchaToken) {
+      setError("Please complete the CAPTCHA");
+      setLoading(false);
+      return;
+    }
 
-        if (!recaptchaToken) {
-          setError("Please complete the CAPTCHA");
-          setLoading(false);
-          return;
-        }
-      }
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        ...(mfaRequired && mfaToken ? { mfaToken } : {}),
+        recaptchaToken,
+      }),
+    });
 
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          ...(mfaRequired && mfaToken ? { mfaToken } : {}),
-          ...(recaptchaToken ? { recaptchaToken } : {}),
-        }),
-      });
+    const data = await res.json();
 
-      const data = await res.json();
-
-      if (data.passwordExpired && data.resetToken) {
+    if (data.passwordExpired && data.resetToken) {
       router.push(`/reset-password?token=${data.resetToken}`);
       return;
     }
 
-      if (!res.ok) {
-        setError(data.error || "Login failed");
-        setLoading(false);
-        // @ts-expect-error grecaptcha is loaded globally
-        grecaptcha.reset();
-        return;
-      }
-
-      if (data.mfaRequired) {
-        setMfaRequired(true);
-        setLoading(false);
-        return;
-      }
-
-      router.push("/dashboard");
-    } catch {
-      setError("Something went wrong. Please try again.");
+    if (!res.ok) {
+      setError(data.error || "Login failed");
       setLoading(false);
+      // @ts-expect-error grecaptcha is loaded globally
+      grecaptcha.reset();
+      return;
     }
+
+    if (data.mfaRequired) {
+      setMfaRequired(true);
+      setLoading(false);
+      // @ts-expect-error grecaptcha is loaded globally
+      grecaptcha.reset();
+      return;
+    }
+
+    router.push("/dashboard");
+  } catch {
+    setError("Something went wrong. Please try again.");
+    setLoading(false);
   }
+}
 
   return (
     <main className="min-h-screen flex">
