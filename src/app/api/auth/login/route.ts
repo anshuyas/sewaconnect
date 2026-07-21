@@ -39,10 +39,11 @@ export async function POST(req: NextRequest) {
       headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
     }
   );
-}
+}    
 
   try {
     const body = sanitizeInput(await req.json());
+console.log("SERVER RECEIVED:", JSON.stringify(body));
     const parsed = LoginSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -51,8 +52,7 @@ export async function POST(req: NextRequest) {
 
     const { email, password, mfaToken, recaptchaToken } = parsed.data;
 
-    if (!mfaToken) {
-      if (!recaptchaToken) {
+    if (!recaptchaToken) {
         return NextResponse.json(
           { error: "CAPTCHA verification required" },
           { status: 400 }
@@ -65,10 +65,10 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-    }
 
     await connectDB();
 
+    const count = await User.countDocuments({});
     const user = await User.findOne({ email }).select(
       "+passwordHash +mfaSecret +passwordHistory"
     );
