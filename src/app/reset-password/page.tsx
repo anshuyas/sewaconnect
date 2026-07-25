@@ -33,7 +33,7 @@ function ResetPasswordForm() {
         </h1>
         <p className="text-gray-500 text-sm">
           This page needs a valid reset link. Please try logging in again —
-          if your password has expired, you'll be sent here automatically
+          if your password has expired, you&apos;ll be sent here automatically
           with a valid link.
         </p>
         <a href="/login" className="inline-block text-blue-600 text-sm font-medium hover:underline">

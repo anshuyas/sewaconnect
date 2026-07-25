@@ -43,7 +43,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = sanitizeInput(await req.json());
-console.log("SERVER RECEIVED:", JSON.stringify(body));
     const parsed = LoginSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -68,7 +67,6 @@ console.log("SERVER RECEIVED:", JSON.stringify(body));
 
     await connectDB();
 
-    const count = await User.countDocuments({});
     const user = await User.findOne({ email }).select(
       "+passwordHash +mfaSecret +passwordHistory"
     );
