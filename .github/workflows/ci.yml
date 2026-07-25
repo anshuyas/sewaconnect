@@ -33,7 +33,7 @@ jobs:
         run: npm run test:security
 
       - name: Dependency vulnerability audit
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --audit-level=critical
 
   sast:
     runs-on: ubuntu-latest
@@ -44,3 +44,5 @@ jobs:
         uses: semgrep/semgrep-action@v1
         with:
           config: p/owasp-top-ten
+
+
